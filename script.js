@@ -12,6 +12,9 @@ const onLoad = () => {
     const vs = createShader("vs");
     const fs = createShader("fs");
     const program = createProgram(vs, fs);
+    var attLocation = gl.getAttribLocation(program, "position");
+    var attStride = 3;
+
 
     // 時計周りで上、右、左
     const vertexPosition = [
@@ -21,6 +24,32 @@ const onLoad = () => {
     ];
 
     const vbo = createVbo(vertexPosition);
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    gl.enableVertexAttribArray(attLocation);
+    gl.vertexAttribPointer(attLocation, attStride, gl.FLOAT, false, 0, 0);
+
+    var m = new matIV();
+    var matrix = m.identity(m.create());
+    m.translate(matrix, [1.0, 0.0, 0.0], matrix);
+
+    var mMatrix = m.identity(m.create());
+    var vMatrix = m.identity(m.create());
+    var pMatrix = m.identity(m.create());
+    var mvpMatrix = m.identity(m.create());
+
+    m.lookAt([0.0, 1.0, 3.0], [0, 0, 0], [0, 1, 0], vMatrix);
+
+    m.perspective(90, c.width / c.height, 0.1, 100, pMatrix);
+
+    m.multiply(pMatrix, vMatrix, mvpMatrix);
+    m.multiply(mvpMatrix, mMatrix, mvpMatrix);
+
+    var uniLocation = gl.getUniformLocation(program, "mvpMatrix");
+    gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    gl.flush();
 };
 
 function createShader(id) {
